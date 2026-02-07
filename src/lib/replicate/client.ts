@@ -65,39 +65,39 @@ export async function generateImage(prompt: string, aspectRatio: ImageAspectRati
   };
 
   return retryApiCall(async () => {
-    try {
-      // Make request with "Prefer: wait" header for synchronous response
+  try {
+    // Make request with "Prefer: wait" header for synchronous response
       const response = await axios.post(SEEDREAM_API_URL, requestBody, {
-        headers: {
-          Authorization: `Bearer ${apiToken}`,
-          'Content-Type': 'application/json',
-          Prefer: 'wait', // Wait for result instead of polling
-        },
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+        Prefer: 'wait', // Wait for result instead of polling
+      },
         timeout: 180000, // 3 minutes timeout for high quality
-      });
+    });
 
-      // Check if we got output directly (synchronous response)
-      if (response.data?.output) {
-        const imageUrl = extractImageUrl(response.data.output);
-        if (imageUrl) {
+    // Check if we got output directly (synchronous response)
+    if (response.data?.output) {
+      const imageUrl = extractImageUrl(response.data.output);
+      if (imageUrl) {
           console.log('[Seedream] Image generated (sync):', imageUrl);
-          return imageUrl;
-        }
+        return imageUrl;
       }
+    }
 
-      // If no immediate output, we need to poll
-      const statusUrl = response.data?.urls?.get;
+    // If no immediate output, we need to poll
+    const statusUrl = response.data?.urls?.get;
       if (!statusUrl && response.data?.id) {
         const pollUrl = `https://api.replicate.com/v1/predictions/${response.data.id}`;
         return await pollForResult(pollUrl, apiToken);
-      }
-      
+    }
+
       if (statusUrl) {
         return await pollForResult(statusUrl, apiToken);
       }
 
       throw new Error('No status URL returned from Seedream');
-    } catch (error: unknown) {
+  } catch (error: unknown) {
       const axiosError = error as { response?: { data?: unknown; status?: number }; message?: string };
       console.error('[Seedream] Generation failed:', axiosError.response?.data || axiosError.message);
       
@@ -107,7 +107,7 @@ export async function generateImage(prompt: string, aspectRatio: ImageAspectRati
         ? `Image generation failed (${statusCode}): ${axiosError.message}`
         : `Image generation failed: ${axiosError.message}`;
       throw new Error(errorMsg);
-    }
+  }
   }, 'Seedream image generation');
 }
 
@@ -289,19 +289,19 @@ export async function downloadImage(imageUrl: string): Promise<Buffer> {
   console.log('[Seedream] Downloading image from:', imageUrl);
   
   return retryApiCall(async () => {
-    const response = await axios({
-      method: 'GET',
-      url: imageUrl,
-      responseType: 'arraybuffer',
-      timeout: 60000,
-    });
+  const response = await axios({
+    method: 'GET',
+    url: imageUrl,
+    responseType: 'arraybuffer',
+    timeout: 60000,
+  });
 
-    if (!response.data) {
-      throw new Error('No data received from image download');
-    }
+  if (!response.data) {
+    throw new Error('No data received from image download');
+  }
 
     console.log('[Seedream] Image downloaded, size:', response.data.length, 'bytes');
-    return Buffer.from(response.data);
+  return Buffer.from(response.data);
   }, 'Seedream image download');
 }
 

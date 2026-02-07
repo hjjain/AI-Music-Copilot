@@ -184,14 +184,14 @@ export default function HistoryPage() {
       {/* Header */}
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            <span className="gradient-text">Generation History</span>
-          </h1>
-          <p className="mt-2 text-white/60">
-            View your previously generated songs and YouTube uploads.
-          </p>
-        </div>
-        
+        <h1 className="text-3xl font-bold">
+          <span className="gradient-text">Generation History</span>
+        </h1>
+        <p className="mt-2 text-white/60">
+          View your previously generated songs and YouTube uploads.
+        </p>
+      </div>
+
         {data && data.jobs.length > 0 && (
           <button
             onClick={handleClearAll}
@@ -310,37 +310,37 @@ export default function HistoryPage() {
                       Error: {job.error}
                     </p>
                   )}
-                  
+
                   {/* YouTube links */}
                   {job.youtube && (
-                    <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                       {job.youtube.mainVideo && (
-                        <a
+                  <a
                           href={job.youtube.mainVideo.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 rounded-lg bg-red-600/20 px-3 py-1.5 text-sm text-red-400 hover:bg-red-600/30"
-                        >
-                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/>
-                            <polygon points="9.545,15.568 15.818,12 9.545,8.432" fill="white"/>
-                          </svg>
-                          Main Video
-                        </a>
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg bg-red-600/20 px-3 py-1.5 text-sm text-red-400 hover:bg-red-600/30"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/>
+                      <polygon points="9.545,15.568 15.818,12 9.545,8.432" fill="white"/>
+                    </svg>
+                    Main Video
+                  </a>
                       )}
                       {job.youtube.shorts?.map((short, i) => (
-                        <a
-                          key={i}
+                    <a
+                      key={i}
                           href={short.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 rounded-lg bg-purple-600/20 px-3 py-1.5 text-sm text-purple-400 hover:bg-purple-600/30"
-                        >
-                          Short {i + 1}
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-lg bg-purple-600/20 px-3 py-1.5 text-sm text-purple-400 hover:bg-purple-600/30"
+                    >
+                      Short {i + 1}
+                    </a>
+                  ))}
+                </div>
+              )}
 
                   {/* Upload to YouTube button */}
                   {canUpload(job) && (

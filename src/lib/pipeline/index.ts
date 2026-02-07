@@ -26,7 +26,6 @@ import { addJobToHistory } from '@/lib/storage/history';
 import { generateVideoFromImage, downloadVideo, getAnimationPromptSet } from '@/lib/kling/client';
 import { generateMultiSceneImagePrompts, getAnimationPromptsForScenes } from '@/lib/prompts/romantic-generator';
 import { getThemeById } from '@/lib/prompts/romantic-config';
-import { getLyricsForTheme } from '@/lib/prompts/lyrics-generator';
 
 /**
  * Options for manual prompt mode
@@ -277,30 +276,27 @@ export class GenerationPipeline {
 
   /**
    * Step 1: Generate song using Suno
-   * Now uses professional pre-written lyrics inspired by legendary Hindi lyricists
+   * 
+   * IMPORTANT: We let Suno generate lyrics (custom=false) for two reasons:
+   * 1. The timing API only provides accurate word-level timing for Suno-generated lyrics
+   * 2. This ensures perfect lyrics-to-audio synchronization for the video
+   * 
+   * The prompt guides Suno to create professional-quality Hindi lyrics with:
+   * - Music styles: Anirudh, Coldplay, Anime OST, A.R. Rahman
+   * - Hinglish (Hindi words in Roman script)
    */
   private async generateSong(): Promise<void> {
     this.updateStatus('generating_song', 'Generating song with Suno AI...');
 
     const { title, lyrics, style } = this.job.prompt;
 
-    // Get theme for professional lyrics generation
-    const theme = this.themeId ? getThemeById(this.themeId) : null;
-    
-    // Generate professional custom lyrics if theme is available
-    let customLyrics: string | undefined;
-    if (theme) {
-      console.log('[Pipeline] Generating professional lyrics for theme:', theme.nameHindi);
-      customLyrics = getLyricsForTheme(theme, title);
-      console.log('[Pipeline] Professional lyrics generated:', customLyrics.substring(0, 100) + '...');
-    }
-
-    // Generate the song with custom lyrics (or let Suno generate if no theme)
+    // DO NOT use custom lyrics - let Suno generate for proper timing sync
+    // The style prompt guides Suno to create quality Hindi lyrics
     const songData = await generateSong({ 
       title, 
       lyrics, 
       style,
-      customLyrics, // Pass professional lyrics (if available)
+      // customLyrics is NOT passed - Suno generates lyrics for timing API to work
     });
 
     // Download the audio
@@ -311,11 +307,15 @@ export class GenerationPipeline {
     // Get duration
     const duration = await getAudioDuration(audioPath);
 
-    // Get lyrics timing (for karaoke)
+    // Get lyrics timing from Suno API (word-level accuracy)
+    console.log('[Pipeline] Fetching lyrics timing from Suno API...');
     let lyricsTiming = await getLyricsTiming(songData.id);
     
-    // If no timing from API, parse plain lyrics
-    if (!lyricsTiming && songData.lyric) {
+    if (lyricsTiming && lyricsTiming.segments.length > 0) {
+      console.log('[Pipeline] ✓ Got accurate timing:', lyricsTiming.segments.length, 'segments');
+    } else if (songData.lyric) {
+      // Fallback: estimate timing from lyrics (less accurate)
+      console.log('[Pipeline] ⚠ Using fallback timing estimation');
       lyricsTiming = parsePlainLyrics(songData.lyric, duration);
     }
 
@@ -324,7 +324,7 @@ export class GenerationPipeline {
       id: songData.id,
       title: songData.title || title,
       audioUrl: audioPath, // Local path
-      lyrics: songData.lyric || customLyrics || lyrics,
+      lyrics: songData.lyric || lyrics,
       lyricsTimming: lyricsTiming || undefined,
       duration,
     };

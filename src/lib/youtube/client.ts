@@ -110,34 +110,34 @@ export async function uploadVideo(config: YouTubeUploadConfig): Promise<YouTubeU
     try {
       // Need to recreate stream for each retry attempt
       const mediaStream = {
-        body: fs.createReadStream(config.videoPath),
-      };
+    body: fs.createReadStream(config.videoPath),
+  };
 
-      const response = await youtube.videos.insert({
-        part: ['snippet', 'status'],
-        requestBody,
+    const response = await youtube.videos.insert({
+      part: ['snippet', 'status'],
+      requestBody,
         media: mediaStream,
-      });
+    });
 
-      const videoId = response.data.id;
-      if (!videoId) {
-        throw new Error('No video ID returned from YouTube');
-      }
+    const videoId = response.data.id;
+    if (!videoId) {
+      throw new Error('No video ID returned from YouTube');
+    }
 
-      const result: YouTubeUploadResult = {
-        videoId,
-        url: config.isShort 
-          ? `https://youtube.com/shorts/${videoId}`
-          : `https://youtube.com/watch?v=${videoId}`,
-        title: config.title,
-      };
+    const result: YouTubeUploadResult = {
+      videoId,
+      url: config.isShort 
+        ? `https://youtube.com/shorts/${videoId}`
+        : `https://youtube.com/watch?v=${videoId}`,
+      title: config.title,
+    };
 
-      console.log('[YouTube] Upload successful:', result.url);
-      return result;
-    } catch (error: unknown) {
+    console.log('[YouTube] Upload successful:', result.url);
+    return result;
+  } catch (error: unknown) {
       const err = error as { message?: string; response?: { data?: unknown; status?: number } };
-      console.error('[YouTube] Upload failed:', err.message);
-      console.error('[YouTube] Error details:', err.response?.data);
+    console.error('[YouTube] Upload failed:', err.message);
+    console.error('[YouTube] Error details:', err.response?.data);
       
       // Include status code in error message for retry logic
       const statusCode = err.response?.status;
@@ -145,7 +145,7 @@ export async function uploadVideo(config: YouTubeUploadConfig): Promise<YouTubeU
         ? `YouTube upload failed (${statusCode}): ${err.message}`
         : `YouTube upload failed: ${err.message}`;
       throw new Error(errorMsg);
-    }
+  }
   }, 'YouTube upload');
 }
 

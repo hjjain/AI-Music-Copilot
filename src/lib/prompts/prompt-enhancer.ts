@@ -178,8 +178,56 @@ export function quickEnhancePrompt(
 }
 
 /**
+ * Music Style Presets
+ * Inspired by:
+ * - Anirudh Ravichander (modern, catchy, electronic fusion)
+ * - Coldplay (anthemic, atmospheric, emotional builds)
+ * - Anime OST (RADWIMPS, Yuki Hayashi - piano, orchestral, emotional)
+ */
+export const MUSIC_STYLE_PRESETS = [
+  // Anirudh style - modern, catchy
+  {
+    style: 'modern electronic, synth bass, catchy hook, Anirudh style',
+    desc: 'upbeat modern production, electronic beats, infectious melody',
+    weight: 25,
+  },
+  // Coldplay style - anthemic, emotional
+  {
+    style: 'anthemic rock, atmospheric synths, U2/Coldplay style build',
+    desc: 'soaring emotional build, reverb guitars, stadium anthem feel',
+    weight: 25,
+  },
+  // Anime OST style - RADWIMPS/Your Name
+  {
+    style: 'piano driven, orchestral swells, anime OST, RADWIMPS style',
+    desc: 'emotional piano, sweeping strings, cinematic anime soundtrack',
+    weight: 30,
+  },
+  // A.R. Rahman style - soulful, Indian classical fusion
+  {
+    style: 'A.R. Rahman style, soulful, Indian classical fusion, ambient',
+    desc: 'layered harmonies, Indian instruments, haunting melody',
+    weight: 20,
+  },
+];
+
+/**
+ * Get a weighted random music style preset
+ */
+function getRandomMusicStyle(): typeof MUSIC_STYLE_PRESETS[0] {
+  const totalWeight = MUSIC_STYLE_PRESETS.reduce((sum, s) => sum + s.weight, 0);
+  let random = Math.random() * totalWeight;
+  
+  for (const style of MUSIC_STYLE_PRESETS) {
+    random -= style.weight;
+    if (random <= 0) return style;
+  }
+  return MUSIC_STYLE_PRESETS[0];
+}
+
+/**
  * Generate a concise music prompt for Suno (max 200 chars)
- * Now includes anime music fusion elements and emotion intensity
+ * Music styles: Anirudh, Coldplay, Anime OST, A.R. Rahman
  */
 export function generateSunoPrompt(
   theme: string,
@@ -187,36 +235,23 @@ export function generateSunoPrompt(
   style: string,
   intensity: EmotionIntensity = 'medium'
 ): string {
-  // Randomly decide if this should have anime fusion style (40% chance)
-  const useAnimeStyle = Math.random() < 0.4;
-  const mod = INTENSITY_MODIFIERS[intensity];
+  // Get a random music style preset
+  const musicStyle = getRandomMusicStyle();
   
   // Get intensity-specific descriptor
-  const intensityDesc = intensity === 'high' ? 'slow, emotional, powerful'
-    : intensity === 'low' ? 'soft, gentle, sweet'
-    : 'melodious, flowing';
+  const intensityDesc = intensity === 'high' ? 'slow emotional powerful'
+    : intensity === 'low' ? 'soft gentle sweet'
+    : 'melodious flowing';
   
-  let prompt: string;
-  
-  if (useAnimeStyle) {
-    // Anime-inspired romantic Hindi song
-    const animeElements = [
-      'piano and orchestral strings',
-      'emotional rock guitars with strings',
-      'ethereal synths and piano',
-      'cinematic orchestral build',
-    ];
-    const animeElement = animeElements[Math.floor(Math.random() * animeElements.length)];
-    prompt = `Hindi romantic song, ${emotion}. ${animeElement}. ${intensityDesc}. Anime OST style.`;
-  } else {
-    // Traditional Bollywood style
-    prompt = `Hindi romantic song about ${emotion}. ${style}. ${intensityDesc}. Bollywood vocals.`;
-  }
+  // Build the prompt - keep it concise for Suno
+  const prompt = `Hindi romantic song, ${emotion}. ${musicStyle.style}. ${intensityDesc}.`;
   
   // Truncate if needed
   if (prompt.length > 200) {
     return prompt.substring(0, 197) + '...';
   }
+  
+  console.log('[Prompt] Music style selected:', musicStyle.desc);
   return prompt;
 }
 

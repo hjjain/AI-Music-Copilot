@@ -12,18 +12,13 @@ const SUNO_MODEL = process.env.SUNO_MODEL || 'chirp-v4';
 /**
  * Generate a song using Suno API
  * 
- * Two modes:
- * 1. Custom lyrics mode (custom=true): Pass professional pre-written lyrics
- * 2. Auto lyrics mode (custom=false): Suno generates lyrics from prompt
- * 
- * For best results with Hindi music, use custom lyrics mode with
- * pre-written professional Hinglish lyrics.
+ * Suno generates lyrics from our prompt (custom=false)
+ * This ensures the timing API works correctly for lyrics sync
  */
 export async function generateSong(params: {
   title: string;
   lyrics: string;
   style?: string;
-  customLyrics?: string; // If provided, use custom mode with these lyrics
 }): Promise<SunoSongData> {
   const apiKey = process.env.SUNO_API_KEY;
   
@@ -31,50 +26,27 @@ export async function generateSong(params: {
     throw new Error('SUNO_API_KEY is not configured');
   }
 
-  // Determine if we should use custom lyrics mode
-  const hasCustomLyrics = params.customLyrics && params.customLyrics.length > 50;
-  
   console.log('[Suno] Generating song:', params.title);
-  console.log('[Suno] Mode:', hasCustomLyrics ? 'CUSTOM LYRICS' : 'AUTO (Suno generates)');
   console.log('[Suno] Style:', params.style);
 
   // Style with Hindi/Hinglish instruction
   const styleWithHinglish = (params.style || 'Hindi, Bollywood inspired') + ', Hinglish lyrics in Roman script';
   
-  let payload;
+  // Suno generates lyrics - this is required for timing API to work
+  const truncatedPrompt = params.lyrics?.substring(0, 150) || '';
+  const hinglishInstruction = 'Lyrics in Hinglish (Hindi words in Roman script). ';
+  const finalPrompt = hinglishInstruction + truncatedPrompt;
   
-  if (hasCustomLyrics) {
-    // CUSTOM LYRICS MODE
-    // Use pre-written professional lyrics (inspired by legendary lyricists)
-    console.log('[Suno] Using professional custom lyrics');
-    console.log('[Suno] Custom lyrics preview:', params.customLyrics!.substring(0, 150) + '...');
-    
-    payload = {
-      action: 'generate',
-      model: SUNO_MODEL,
-      custom: true,  // Use custom lyrics
-      lyric: params.customLyrics,  // Our professional lyrics
-      title: params.title,
-      style: styleWithHinglish,
-    };
-  } else {
-    // AUTO MODE - Suno generates lyrics
-    // Use prompt to guide Suno's lyrics generation
-    const truncatedPrompt = params.lyrics?.substring(0, 150) || '';
-    const hinglishInstruction = 'Lyrics must be in Hinglish (Hindi words in Roman/English script, NOT Devanagari). ';
-    const finalPrompt = hinglishInstruction + truncatedPrompt;
-    
-    console.log('[Suno] Prompt length:', finalPrompt.length);
-    
-    payload = {
-      action: 'generate',
-      model: SUNO_MODEL,
-      custom: false,  // Let Suno generate lyrics
-      prompt: finalPrompt.substring(0, 200),
-      title: params.title,
-      style: styleWithHinglish,
-    };
-  }
+  console.log('[Suno] Prompt:', finalPrompt.substring(0, 100) + '...');
+  
+  const payload = {
+    action: 'generate',
+    model: SUNO_MODEL,
+    custom: false,  // Suno generates lyrics for timing API
+    prompt: finalPrompt.substring(0, 200),
+    title: params.title,
+    style: styleWithHinglish,
+  };
 
   console.log('[Suno] API Request payload:', JSON.stringify(payload, null, 2));
 

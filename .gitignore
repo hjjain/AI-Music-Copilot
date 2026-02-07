@@ -60,3 +60,8 @@ data/
 # Logs
 logs/
 *.log
+
+# Internal planning docs (not for public)
+CURSOR_CONTEXT.md
+CHANGE_PLAN.md
+
